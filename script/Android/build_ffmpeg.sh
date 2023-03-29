@@ -180,6 +180,7 @@ build_all() {
   build "x86_64"
 
   pushd ${ROOT_PATH}/projects/Android/ffmpeg
+  echo "sdk.dir=${ANDROID_SDK}" > local.properties
   ./gradlew assemble
   popd
 
