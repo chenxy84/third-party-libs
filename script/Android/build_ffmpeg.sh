@@ -4,6 +4,13 @@ SCRIPT_PATH=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
 ROOT_PATH=${SCRIPT_PATH}/../..
 source ${ROOT_PATH}/script/common.sh
 
+if [ "${ANDROID_SDK}" == "" ]; then
+  echo "ANDROID_SDK not set"
+  exit 1;
+fi
+
+yes | $ANDROID_SDK/cmdline-tools/latest/bin/sdkmanager --licenses
+
 if [ "${ANDROID_NDK}" == "" ]; then
 	echo "ANDROID_NDK not set"
 	exit 1;
