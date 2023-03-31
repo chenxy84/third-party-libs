@@ -95,6 +95,8 @@ build() {
   CONFIGURATION="$CONFIGURATION --enable-mediacodec"
   CONFIGURATION="$CONFIGURATION --enable-decoder=h264_mediacodec"
   CONFIGURATION="$CONFIGURATION --enable-decoder=hevc_mediacodec"
+  CONFIGURATION="$CONFIGURATION --enable-decoder=vp8_mediacodec"
+  CONFIGURATION="$CONFIGURATION --enable-decoder=vp9_mediacodec"
   
   CONFIGURATION="$CONFIGURATION --logfile=${LOG_PATH}/ffmpeg_config_$FFMPEG_TARGET.log"
   CONFIGURATION="$CONFIGURATION --prefix=$PREFIX/$FFMPEG_TARGET"
