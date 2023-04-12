@@ -83,8 +83,8 @@ build_main()
     (bash ${SCRIPT_PATH}/${BUILD_TARGET}/build_libx264.sh > ${LOG_PATH}/build_libx264_${BUILD_TARGET}.log 2>&1) & spinner
   fi
 
-  # echo "Running build ffmpeg script for ${BUILD_TARGET}"
-  # (bash ${SCRIPT_PATH}/${BUILD_TARGET}/build_ffmpeg.sh > ${LOG_PATH}/build_ffmpeg_${BUILD_TARGET}.log 2>&1) & spinner
+  echo "Running build ffmpeg script for ${BUILD_TARGET}"
+  (bash ${SCRIPT_PATH}/${BUILD_TARGET}/build_ffmpeg.sh > ${LOG_PATH}/build_ffmpeg_${BUILD_TARGET}.log 2>&1) & spinner
   
   end=$(date +%s)
   cost=$(( end - start ))

@@ -20,13 +20,13 @@ NDK_PATH=${ANDROID_NDK} # tag1
 # macOS $NDK_PATH/toolchains/llvm/prebuilt/
 HOST_PLATFORM=darwin-x86_64  #tag1
 # minSdkVersion
-API=26
+API=21
 
 TOOLCHAINS="$NDK_PATH/toolchains/llvm/prebuilt/$HOST_PLATFORM"
 SYSROOT="$NDK_PATH/toolchains/llvm/prebuilt/$HOST_PLATFORM/sysroot"
 
 CFLAG="-Os -fPIC -DANDROID"
-LDFLAG="-lc -lm -ldl -llog -lz"
+LDFLAG="-lc -lm -lz -ldl -llog"
 
 build() {
   FFMPEG_TARGET=$1
@@ -46,20 +46,23 @@ build() {
   case ${FFMPEG_TARGET} in
   armeabi-v7a)
     ARCH="arm"
+    CLANG_RT_ARCH=$ARCH
     SYSROOT_PREFIX=$ARCH-linux-androideabi
     TOOLCHAINS_PREFIX=armv7a-linux-androideabi
-    EXTRA_CFLAGS="-march=armv7-a -marm -mfloat-abi=softfp -mfpu=vfp "
-    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-neon --cpu=armv7-a"
+    EXTRA_CFLAGS="-march=armv7-a -mfpu=neon -mfloat-abi=softfp -marm"
+    EXTRA_OPTIONS="$EXTRA_OPTIONS --cpu=armv7-a --enable-neon "
     ;;
   arm64-v8a)
     ARCH="aarch64"
+    CLANG_RT_ARCH=$ARCH
     SYSROOT_PREFIX=$ARCH-linux-android
     TOOLCHAINS_PREFIX=$SYSROOT_PREFIX
-    EXTRA_CFLAGS="-march=armv8-a -mno-outline-atomics"
-    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-neon"
+    EXTRA_CFLAGS="-march=armv8-a -mfpu=neon -mfloat-abi=softfp"
+    EXTRA_OPTIONS="$EXTRA_OPTIONS --cpu=armv8-a --enable-neon"
     ;;
   x86)
     ARCH="i686"
+    CLANG_RT_ARCH="i386"
     SYSROOT_PREFIX=$ARCH-linux-android
     TOOLCHAINS_PREFIX=$SYSROOT_PREFIX
     EXTRA_CFLAGS="-march=i686  -mssse3 -mfpmath=sse -m32"
@@ -67,6 +70,7 @@ build() {
     ;;
   x86_64)
     ARCH="x86_64"
+    CLANG_RT_ARCH=$ARCH
     SYSROOT_PREFIX=$ARCH-linux-android
     TOOLCHAINS_PREFIX=$SYSROOT_PREFIX
     EXTRA_CFLAGS="-march=$CPU -msse4.2 -mpopcnt -m64"
@@ -117,49 +121,73 @@ build() {
 
   export PKG_CONFIG_PATH=$PREFIX/$FFMPEG_TARGET/lib/pkgconfig
 
-  temp_dir=${TEMP_PATH}/${BUILD_TARGET}/${FFMPEG_TARGET}/ffmpeg
-  if [ -d "${temp_dir}" ]; then
-    rm -rf ${temp_dir}
-  fi
+  # temp_dir=${TEMP_PATH}/${BUILD_TARGET}/${FFMPEG_TARGET}/ffmpeg
+  # if [ -d "${temp_dir}" ]; then
+  #   rm -rf ${temp_dir}
+  # fi
 
-  mkdir -p ${temp_dir}
-  cp -rf ${FFMPEG_REPO_PATH} ${temp_dir}/../
+  # mkdir -p ${temp_dir}
+  # cp -rf ${FFMPEG_REPO_PATH} ${temp_dir}/../
 
-  pushd ${temp_dir}
+  # pushd ${temp_dir}
 
-  echo "-------- > Start config makefile with $CONFIGURATION"
-  echo "-------- > with option --extra-cflags=${EXTRA_CFLAGS} --extra-cxxflags=${EXTRA_CXXFLAGS} --extra-ldflags=${EXTRA_LDFLAGS}"
-  echo "-------- > with pkgconfig $PKG_CONFIG_PATH"
+  # echo "-------- > Start config makefile with $CONFIGURATION"
+  # echo "-------- > with option --extra-cflags=${EXTRA_CFLAGS} --extra-cxxflags=${EXTRA_CXXFLAGS} --extra-ldflags=${EXTRA_LDFLAGS}"
+  # echo "-------- > with pkgconfig $PKG_CONFIG_PATH"
 
-  ./configure ${CONFIGURATION} \
-  --extra-cflags="$EXTRA_CFLAGS" \
-  --extra-ldflags="$EXTRA_LDFLAGS" \
-  || exit 1
+  # ./configure ${CONFIGURATION} \
+  # --extra-cflags="$EXTRA_CFLAGS" \
+  # --extra-ldflags="$EXTRA_LDFLAGS" \
+  # || exit 1
 
-  echo "-------- > Start make $FFMPEG_TARGET with -j${BUILD_THREADS}"
-  make -j${BUILD_THREADS} || exit 1
+  # echo "-------- > Start make $FFMPEG_TARGET with -j${BUILD_THREADS}"
+  # make -j${BUILD_THREADS} || exit 1
 
-  echo "-------- > Start install $FFMPEG_TARGET"
-  make install || exit 1
-  echo "++++++++ > make and install $FFMPEG_TARGET complete."
-  popd
+  # echo "-------- > Start install $FFMPEG_TARGET"
+  # make install || exit 1
+  # echo "++++++++ > make and install $FFMPEG_TARGET complete."
+  # popd
 
   echo "-------- > Generate libffmpeg.so"
 
   pushd $PREFIX/$FFMPEG_TARGET/lib
 
-  SYS_LINK_RPATH=$SYSROOT/usr/lib/$SYSROOT_PREFIX/$API
+
+  SYS_LINK_RPATH_PRFIX=$SYSROOT/usr/lib/$SYSROOT_PREFIX
+  SYS_LINK_RPATH=$SYS_LINK_RPATH_PRFIX/$API
+
+  CLANG_RT_PATH=$TOOLCHAINS/lib64/clang/14.0.7/lib/linux
 
   echo "-------- >SO_PATH: $PREFIX/$FFMPEG_TARGET/lib"
   echo "-------- >SYS_LINK_RPATH: $SYS_LINK_RPATH"
 
-  $TOOLCHAINS/bin/ld -rpath-link=$SYS_LINK_RPATH -L$SYS_LINK_RPATH \
-  -soname libffmpeg.so \
-  -shared -Bsymbolic --whole-archive -o $PREFIX/$FFMPEG_TARGET/lib/libffmpeg.so \
+  # -L$CLANG_RT_PATH/$CLANG_RT_ARCH -lunwind
+  #  --no-undefined \ 
+
+  $CC $EXTRA_CFLAGS  \
+  -shared -o libffmpeg.so \
+  -Wl,--whole-archive -Wl,-Bsymbolic \
+  --no-undefined \
   libavcodec.a libavformat.a libswresample.a libavfilter.a libavutil.a libswscale.a \
   libssl.a libcrypto.a \
+  -Wl,--no-whole-archive -Wl,-rpath= \
   $EXTRA_LDFLAGS \
   || exit 1
+
+
+  # $TOOLCHAINS/bin/ld \
+  # -rpath-link=$SYS_LINK_RPATH -L$SYS_LINK_RPATH \
+  # -soname libffmpeg.so \
+  # -shared -Bsymbolic --no-undefined --whole-archive \
+  # --no-undefined \
+  # -o $PREFIX/$FFMPEG_TARGET/lib/libffmpeg.so \
+  # libavcodec.a libavformat.a libswresample.a libavfilter.a libavutil.a libswscale.a \
+  # libssl.a libcrypto.a \
+  # $EXTRA_LDFLAGS \
+  # --dynamic-linker=/system/bin/linker \
+  # $CLANG_RT_PATH/libclang_rt.builtins-$ARCH-android.a \
+  # $CLANG_RT_PATH/$CLANG_RT_ARCH/libunwind.a \
+  # || exit 1
 
   #mv so to jni libs
   android_jnilibs=${ROOT_PATH}/projects/Android/ffmpeg/library/libs/${FFMPEG_TARGET}
@@ -176,10 +204,10 @@ build() {
 }
 
 build_all() {
-  build "armeabi-v7a"
+  # build "armeabi-v7a"
   build "arm64-v8a"
-  build "x86"
-  build "x86_64"
+  # build "x86"
+  # build "x86_64"
 
   pushd ${ROOT_PATH}/projects/Android/ffmpeg
   echo "sdk.dir=${ANDROID_SDK}" > local.properties

@@ -75,7 +75,7 @@ build() {
   pushd ${temp_dir}
 
   #./Configure $OPENSSL_OS --prefix=$PREFIX/$OPENSSL_TARGET -D__ANDROID_API__=$API no-shared
-  ./Configure $OPENSSL_OS --prefix=$PREFIX/$OPENSSL_TARGET -U__ANDROID_API__ -D__ANDROID_API__=$API no-shared \
+  ./Configure $OPENSSL_OS --prefix=$PREFIX/$OPENSSL_TARGET -D__ANDROID_API__=$API no-shared \
   || exit 1
 
   echo "-------- > Start make $OPENSSL_TARGET with -j16"
@@ -90,10 +90,10 @@ build() {
 }
 
 build_all() {
-  build "armeabi-v7a"
+  # build "armeabi-v7a"
   build "arm64-v8a"
-  build "x86"
-  build "x86_64"
+  # build "x86"
+  # build "x86_64"
 }
 
 echo "-------- Start --------"
