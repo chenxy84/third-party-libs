@@ -28,57 +28,32 @@ build() {
   case ${OPENSSL_TARGET} in
   armeabi-v7a)
     ARCH="arm"
-    CPU="armv7-a"
-    MARCH="armv7-a"
-    TARGET=armv7a-linux-androideabi
-    CC="$TOOLCHAINS/bin/$TARGET$API-clang"
-    CXX="$TOOLCHAINS/bin/$TARGET$API-clang++"
-    CROSS_PREFIX="$TOOLCHAINS/bin/$TARGET$API-"
-    EXTRA_CFLAGS="$CFLAG -mfloat-abi=softfp -mfpu=vfp -marm -march=$MARCH "
-    EXTRA_LDFLAGS="$LDFLAG"
-    EXTRA_OPTIONS="--enable-neon --cpu=$CPU "
+    SYSROOT_PREFIX=$ARCH-linux-androideabi
+    TOOLCHAINS_PREFIX=armv7a-linux-androideabi
     OPENSSL_OS=android-arm
     ;;
   arm64-v8a)
     ARCH="aarch64"
-    TARGET=$ARCH-linux-android
-    CC="$TOOLCHAINS/bin/$TARGET$API-clang"
-    CXX="$TOOLCHAINS/bin/$TARGET$API-clang++"
-    CROSS_PREFIX="$TOOLCHAINS/bin/$TARGET-"
-    EXTRA_CFLAGS="$CFLAG"
-    EXTRA_LDFLAGS="$LDFLAG"
-    EXTRA_OPTIONS="--enable-neon"
+    SYSROOT_PREFIX=$ARCH-linux-android
+    TOOLCHAINS_PREFIX=$SYSROOT_PREFIX
     OPENSSL_OS=android-arm64
     ;;
   x86)
-    ARCH="x86"
-    CPU="i686"
-    MARCH="i686"
-    TARGET=i686-linux-android
-    CC="$TOOLCHAINS/bin/$TARGET$API-clang"
-    CXX="$TOOLCHAINS/bin/$TARGET$API-clang++"
-    CROSS_PREFIX="$TOOLCHAINS/bin/$TARGET-"
-    #EXTRA_CFLAGS="$CFLAG -march=$MARCH -mtune=intel -mssse3 -mfpmath=sse -m32"
-    EXTRA_CFLAGS="$CFLAG -march=$MARCH  -mssse3 -mfpmath=sse -m32"
-    EXTRA_LDFLAGS="$LDFLAG"
-    EXTRA_OPTIONS="--disable-asm"
+    ARCH="i686"
+    SYSROOT_PREFIX=$ARCH-linux-android
+    TOOLCHAINS_PREFIX=$SYSROOT_PREFIX
     OPENSSL_OS=android-x86
     ;;
   x86_64)
     ARCH="x86_64"
-    CPU="x86-64"
-    MARCH="x86_64"
-    TARGET=$ARCH-linux-android
-    CC="$TOOLCHAINS/bin/$TARGET$API-clang"
-    CXX="$TOOLCHAINS/bin/$TARGET$API-clang++"
-    CROSS_PREFIX="$TOOLCHAINS/bin/$TARGET-"
-    #EXTRA_CFLAGS="$CFLAG -march=$CPU -mtune=intel -msse4.2 -mpopcnt -m64"
-    EXTRA_CFLAGS="$CFLAG -march=$CPU -msse4.2 -mpopcnt -m64"
-    EXTRA_LDFLAGS="$LDFLAG"
-    EXTRA_OPTIONS="--disable-asm"
+    SYSROOT_PREFIX=$ARCH-linux-android
+    TOOLCHAINS_PREFIX=$SYSROOT_PREFIX
     OPENSSL_OS=android-x86_64
     ;;
   esac
+
+  CC="$TOOLCHAINS/bin/$TOOLCHAINS_PREFIX$API-clang"
+  CXX="$TOOLCHAINS/bin/$TOOLCHAINS_PREFIX$API-clang++"
 
   echo "-------- > Start build configuration $OPENSSL_TARGET"
 

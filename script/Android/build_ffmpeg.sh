@@ -31,8 +31,14 @@ LDFLAG="-lc -lm -ldl -llog -lz"
 build() {
   FFMPEG_TARGET=$1
 
-  EXTRA_OPTIONS=
+  SYSROOT_PREFIX=
+  TOOLCHAINS_PREFIX=
+  CC=
+  CXX=
+  CROSS_PREFIX=
   EXTRA_CFLAGS=
+  EXTRA_OPTIONS=
+
   EXTRA_CXXFLAGS=
   EXTRA_LDFLAGS=
 
@@ -40,49 +46,36 @@ build() {
   case ${FFMPEG_TARGET} in
   armeabi-v7a)
     ARCH="arm"
-    CPU="armv7-a"
-    MARCH="armv7-a"
-    TARGET=armv7a-linux-androideabi
-    CC="$TOOLCHAINS/bin/$TARGET$API-clang"
-    CXX="$TOOLCHAINS/bin/$TARGET$API-clang++"
-    CROSS_PREFIX="$TOOLCHAINS/bin/$TARGET$API-"
-    EXTRA_CFLAGS="-mfloat-abi=softfp -mfpu=vfp -marm -march=$MARCH"
-    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-neon --cpu=$CPU "
+    SYSROOT_PREFIX=$ARCH-linux-androideabi
+    TOOLCHAINS_PREFIX=armv7a-linux-androideabi
+    EXTRA_CFLAGS="-march=armv7-a -marm -mfloat-abi=softfp -mfpu=vfp "
+    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-neon --cpu=armv7-a"
     ;;
   arm64-v8a)
     ARCH="aarch64"
-    MARCH="armv8-a"
-    TARGET=$ARCH-linux-android
-    CC="$TOOLCHAINS/bin/$TARGET$API-clang"
-    CXX="$TOOLCHAINS/bin/$TARGET$API-clang++"
-    CROSS_PREFIX="$TOOLCHAINS/bin/$TARGET-"
-    EXTRA_CFLAGS="-march=$MARCH"
+    SYSROOT_PREFIX=$ARCH-linux-android
+    TOOLCHAINS_PREFIX=$SYSROOT_PREFIX
+    EXTRA_CFLAGS="-march=armv8-a -mno-outline-atomics"
     EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-neon"
     ;;
   x86)
-    ARCH="x86"
-    CPU="i686"
-    MARCH="i686"
-    TARGET=i686-linux-android
-    CC="$TOOLCHAINS/bin/$TARGET$API-clang"
-    CXX="$TOOLCHAINS/bin/$TARGET$API-clang++"
-    CROSS_PREFIX="$TOOLCHAINS/bin/$TARGET-"
-    #EXTRA_CFLAGS="$CFLAG -march=$MARCH -mtune=intel -mssse3 -mfpmath=sse -m32"
-    EXTRA_CFLAGS="-march=$MARCH  -mssse3 -mfpmath=sse -m32"
+    ARCH="i686"
+    SYSROOT_PREFIX=$ARCH-linux-android
+    TOOLCHAINS_PREFIX=$SYSROOT_PREFIX
+    EXTRA_CFLAGS="-march=i686  -mssse3 -mfpmath=sse -m32"
     EXTRA_OPTIONS="$EXTRA_OPTIONS --disable-asm"
     ;;
   x86_64)
     ARCH="x86_64"
-    CPU="x86-64"
-    MARCH="x86_64"
-    TARGET=$ARCH-linux-android
-    CC="$TOOLCHAINS/bin/$TARGET$API-clang"
-    CXX="$TOOLCHAINS/bin/$TARGET$API-clang++"
-    CROSS_PREFIX="$TOOLCHAINS/bin/$TARGET-"
-    #EXTRA_CFLAGS="$CFLAG -march=$CPU -mtune=intel -msse4.2 -mpopcnt -m64"
+    SYSROOT_PREFIX=$ARCH-linux-android
+    TOOLCHAINS_PREFIX=$SYSROOT_PREFIX
     EXTRA_CFLAGS="-march=$CPU -msse4.2 -mpopcnt -m64"
     ;;
   esac
+
+  CROSS_PREFIX="$TOOLCHAINS/bin/$TOOLCHAINS_PREFIX$API-"
+  CC="$TOOLCHAINS/bin/$TOOLCHAINS_PREFIX$API-clang"
+  CXX="$TOOLCHAINS/bin/$TOOLCHAINS_PREFIX$API-clang++"
 
   EXTRA_CFLAGS="$CFLAG $EXTRA_CFLAGS"
   EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS $EXTRA_CFLAGS"
@@ -155,16 +148,16 @@ build() {
 
   pushd $PREFIX/$FFMPEG_TARGET/lib
 
-  echo "-------- >SO_PATH: $PREFIX/$FFMPEG_TARGET/lib"
-  echo "-------- >CMD: $CC $EXTRA_CFLAGS"
-  echo "-------- >LDFLAG: $CC $EXTRA_CFLAGS"
+  SYS_LINK_RPATH=$SYSROOT/usr/lib/$SYSROOT_PREFIX/$API
 
-  $CC $EXTRA_CFLAGS \
-  -shared -o libffmpeg.so \
-  -Wl,--whole-archive -Wl,-Bsymbolic \
+  echo "-------- >SO_PATH: $PREFIX/$FFMPEG_TARGET/lib"
+  echo "-------- >SYS_LINK_RPATH: $SYS_LINK_RPATH"
+
+  $TOOLCHAINS/bin/ld -rpath-link=$SYS_LINK_RPATH -L$SYS_LINK_RPATH \
+  -soname libffmpeg.so \
+  -shared -Bsymbolic --whole-archive -o $PREFIX/$FFMPEG_TARGET/lib/libffmpeg.so \
   libavcodec.a libavformat.a libswresample.a libavfilter.a libavutil.a libswscale.a \
   libssl.a libcrypto.a \
-  -Wl,--no-whole-archive \
   $EXTRA_LDFLAGS \
   || exit 1
 
