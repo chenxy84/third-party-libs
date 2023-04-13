@@ -4,6 +4,7 @@
 # build requirement
 ## Android
 ndk 25
+https://dl.google.com/android/repository/android-ndk-r25c-darwin.zip
 
 ## Darwin (iOS & macOS):
 xcode 14.2

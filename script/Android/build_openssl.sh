@@ -18,8 +18,8 @@ API=21
 TOOLCHAINS="$NDK_PATH/toolchains/llvm/prebuilt/$HOST_PLATFORM"
 SYSROOT="$NDK_PATH/toolchains/llvm/prebuilt/$HOST_PLATFORM/sysroot"
 
-CFLAG="-Os -fPIC -DANDROID "
-LDFLAG="-lc -lm -ldl -llog "
+CFLAG="-Os -fPIC -DANDROID"
+LDFLAG="-lm -ldl -llog -lz"
 
 
 build() {
@@ -74,7 +74,6 @@ build() {
 
   pushd ${temp_dir}
 
-  #./Configure $OPENSSL_OS --prefix=$PREFIX/$OPENSSL_TARGET -D__ANDROID_API__=$API no-shared
   ./Configure $OPENSSL_OS --prefix=$PREFIX/$OPENSSL_TARGET -D__ANDROID_API__=$API no-shared \
   || exit 1
 
@@ -90,10 +89,10 @@ build() {
 }
 
 build_all() {
-  # build "armeabi-v7a"
+  build "armeabi-v7a"
   build "arm64-v8a"
-  # build "x86"
-  # build "x86_64"
+  build "x86"
+  build "x86_64"
 }
 
 echo "-------- Start --------"
