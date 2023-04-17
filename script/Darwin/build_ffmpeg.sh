@@ -147,10 +147,49 @@ build() {
 
 }
 
+build_ios_fat_lib() {
+
+  fat_target_path=$PREFIX/iOS_fat
+  if [ -d "${fat_target_path}" ]; then
+    rm -rf ${fat_target_path}
+  fi
+
+  mkdir -p ${fat_target_path}/lib
+
+  # $PREFIX/iOS_arm64/
+
+  libs=
+  libs+=(libavcodec.a)
+  libs+=(libavfilter.a)
+  libs+=(libavformat.a)
+  libs+=(libavutil.a)
+  libs+=(libswresample.a)
+  libs+=(libswscale.a)
+  libs+=(libcrypto.a)
+  libs+=(libssl.a)
+  libs+=(libx264.a)
+
+  for lib in ${libs[@]}
+  do
+    echo "create fat lib $lib"
+    lipo -create \
+    $PREFIX/iOS_arm64/lib/${lib} \
+    $PREFIX/iOS_Simulator_x86_64/lib/${lib} \
+    -output ${fat_target_path}/lib/${lib}
+  done
+
+  cp -rf $PREFIX/iOS_arm64/include ${fat_target_path}/
+
+  # lipo -create 
+
+}
+
 build_all() {
-  build "iOS_arm64"
-  build "iOS_Simulator_x86_64"
-  build "macOS_x86_64"
+  # build "iOS_arm64"
+  # build "iOS_Simulator_x86_64"
+  # build "macOS_x86_64"
+
+  build_ios_fat_lib
 }
 
 echo "-------- Start --------"
