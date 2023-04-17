@@ -179,6 +179,7 @@ build_ios_fat_lib() {
   done
 
   cp -rf $PREFIX/iOS_arm64/include ${fat_target_path}/
+  cp -f ${FFMPEG_REPO_PATH}/libavformat/avc.h ${fat_target_path}/include/libavformat/
 
   # lipo -create 
 
