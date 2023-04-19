@@ -1,10 +1,10 @@
 # deps_build
 
-
 # build requirement
 ## Android
-ndk 25
-https://dl.google.com/android/repository/android-ndk-r25c-darwin.zip
+### Android Studio Version:
+https://redirector.gvt1.com/edgedl/android/studio/install/2022.1.1.21/android-studio-2022.1.1.21-mac.dmg
+
 
 ## Darwin (iOS & macOS):
 xcode 14.2

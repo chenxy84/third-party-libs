@@ -20,7 +20,7 @@ NDK_PATH=${ANDROID_NDK} # tag1
 # macOS $NDK_PATH/toolchains/llvm/prebuilt/
 HOST_PLATFORM=darwin-x86_64  #tag1
 # minSdkVersion
-API=21
+API=26
 
 TOOLCHAINS="$NDK_PATH/toolchains/llvm/prebuilt/$HOST_PLATFORM"
 SYSROOT="$NDK_PATH/toolchains/llvm/prebuilt/$HOST_PLATFORM/sysroot"

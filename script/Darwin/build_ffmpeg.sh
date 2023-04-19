@@ -186,9 +186,9 @@ build_ios_fat_lib() {
 }
 
 build_all() {
-  # build "iOS_arm64"
-  # build "iOS_Simulator_x86_64"
-  # build "macOS_x86_64"
+  build "iOS_arm64"
+  build "iOS_Simulator_x86_64"
+  build "macOS_x86_64" 
 
   build_ios_fat_lib
 }
