@@ -84,8 +84,12 @@ build() {
     EXTRA_CFLAGS="$CFLAGS -target x86_64-apple-macos -arch x86_64 -mmacosx-version-min=$MACOS_DEPLOYMENT_TARGET"
     EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-parser=vp8"
     EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-parser=vp9"
+    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-parser=opus"
+
     EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-decoder=vp8"
     EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-decoder=vp9"
+    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-decoder=opus"
+    
     EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-demuxer=matroska"
     ;;
   esac
@@ -190,8 +194,8 @@ build_ios_fat_lib() {
 }
 
 build_all() {
-  # build "iOS_arm64"
-  # build "iOS_Simulator_x86_64"
+  build "iOS_arm64"
+  build "iOS_Simulator_x86_64"
   build "macOS_x86_64" 
 
   build_ios_fat_lib
