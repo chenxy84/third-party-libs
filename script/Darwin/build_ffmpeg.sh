@@ -89,7 +89,13 @@ build() {
     EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-decoder=vp8"
     EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-decoder=vp9"
     EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-decoder=opus"
-    
+
+    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-hwaccel=h264_videotoolbox"
+    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-hwaccel=hevc_videotoolbox"
+    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-hwaccel=vp9_videotoolbox"
+    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-hwaccel=mpeg4_videotoolbox"
+    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-hwaccel=prores_videotoolbox"
+
     EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-demuxer=matroska"
     ;;
   esac
