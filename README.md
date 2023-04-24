@@ -1,10 +1,10 @@
 # deps_build
 
 # build requirement
+
 ## Android
 ### Android Studio Version:
 https://redirector.gvt1.com/edgedl/android/studio/install/2022.1.1.21/android-studio-2022.1.1.21-mac.dmg
-
 
 ## Darwin (iOS & macOS):
 xcode 14.2
@@ -16,7 +16,7 @@ Visual Studio Community 2022
 Mingw:
 
 # ffmpeg
-## list what u need
+## list what u need, and modify ffmpeg_modules.
 ./configure --list-decoders          show all available decoders
 ./configure --list-encoders          show all available encoders
 ./configure --list-hwaccels          show all available hardware accelerators
@@ -28,3 +28,5 @@ Mingw:
 ./configure --list-indevs            show all available input devices
 ./configure --list-outdevs           show all available output devices
 ./configure --list-filters           show all available filters
+
+

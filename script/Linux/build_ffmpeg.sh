@@ -5,6 +5,7 @@
 SCRIPT_PATH=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
 ROOT_PATH=${SCRIPT_PATH}/../..
 source ${ROOT_PATH}/script/common.sh
+source ${ROOT_PATH}/script/ffmpeg_modules.sh
 
 build() {
 

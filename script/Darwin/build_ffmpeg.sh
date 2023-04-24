@@ -5,6 +5,7 @@
 SCRIPT_PATH=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
 ROOT_PATH=${SCRIPT_PATH}/../..
 source ${ROOT_PATH}/script/common.sh
+source ${ROOT_PATH}/script/ffmpeg_modules.sh
 
 export DEVELOPER=$(xcode-select -print-path)
 
@@ -82,21 +83,12 @@ build() {
     # AS="gas-preprocessor.pl -- $CC"
     AS="$CC"
     EXTRA_CFLAGS="$CFLAGS -target x86_64-apple-macos -arch x86_64 -mmacosx-version-min=$MACOS_DEPLOYMENT_TARGET"
-    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-parser=vp8"
-    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-parser=vp9"
-    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-parser=opus"
-
-    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-decoder=vp8"
-    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-decoder=vp9"
-    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-decoder=opus"
-
     EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-hwaccel=h264_videotoolbox"
     EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-hwaccel=hevc_videotoolbox"
     EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-hwaccel=vp9_videotoolbox"
     EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-hwaccel=mpeg4_videotoolbox"
     EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-hwaccel=prores_videotoolbox"
 
-    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-demuxer=matroska"
     ;;
   esac
 

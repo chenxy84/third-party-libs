@@ -48,49 +48,24 @@ prepare_source()
   fi
 }
 
-print_usage() 
-{
-    echo "Build script for ffmpeg and libs"
-    echo "Usage: ${0}\n" \
-         "with option: ${TARGET_PARAMS} [--with-openssl|--with-x264] "
-}
-
 build_main()
 {
   
   start=$(date +%s)
-  echo "Building for ${BUILD_TARGET}"
 
-  WITH_OPNESSL=false
-  WITH_X264=false
-
-  for arg in $*
-  do
-    if [[ "$arg" == "--with-openssl" ]]; then
-      WITH_OPNESSL=true
-    elif [[ "$arg" == "--with-x264" ]]; then
-      WITH_X264=true
-    fi
-  done
-
-  if [[ $WITH_OPNESSL == true ]]; then
-    echo "Running build openssl script for ${BUILD_TARGET}"
-    (bash ${SCRIPT_PATH}/${BUILD_TARGET}/build_openssl.sh > ${LOG_PATH}/build_openssl_${BUILD_TARGET}.log 2>&1) & spinner
-  fi
-
-  if [[ $WITH_X264 == true ]]; then
-    echo "Running build x264 script for ${BUILD_TARGET}"
-    (bash ${SCRIPT_PATH}/${BUILD_TARGET}/build_libx264.sh > ${LOG_PATH}/build_libx264_${BUILD_TARGET}.log 2>&1) & spinner
-  fi
-
-  echo "Running build ffmpeg script for ${BUILD_TARGET}"
-  (bash ${SCRIPT_PATH}/${BUILD_TARGET}/build_ffmpeg.sh > ${LOG_PATH}/build_ffmpeg_${BUILD_TARGET}.log 2>&1) & spinner
+  export BUILD_TARGET=${BUILD_TARGET}
   
+  echo "Build ${BUILD_PROJECT} for ${BUILD_TARGET}, with debug option is ${IS_DEBUG}"
+
+  echo "shell: ${SCRIPT_PATH}/${BUILD_TARGET}/build_${BUILD_PROJECT}.sh"
+  echo "log: ${LOG_PATH}/build_${BUILD_PROJECT}_${BUILD_TARGET}.log"
+
+  (bash ${SCRIPT_PATH}/${BUILD_TARGET}/build_${BUILD_PROJECT}.sh > ${LOG_PATH}/build_${BUILD_PROJECT}_${BUILD_TARGET}.log 2>&1) & spinner
+
   end=$(date +%s)
   cost=$(( end - start ))
-  echo "Building for ${BUILD_TARGET} End, cost time = ${cost}s"
+  echo "Build ${BUILD_PROJECT} for ${BUILD_TARGET} End, cost time = ${cost}s"
 
-  exit 0
 }
 
 trap 'on_cancel' INT
@@ -104,15 +79,49 @@ on_cancel() {
 }
 
 SCRIPT_PATH=$(cd "$( dirname "${BASH_SOURCE}[0]}" )" && pwd)
-export ROOT_PATH="${SCRIPT_PATH}"/..
+export ROOT_PATH=$(cd "${SCRIPT_PATH}"/.. && pwd)
 export ARCHS_PATH=${ROOT_PATH}/archs
 
-export BUILD_TARGET="$1"
-TARGET_PARAMS="[Android|Darwin|Windows|Linux]"
+PROJECTS="[ffmpeg|openssl|libx264|libx265|libcurl]"
+TARGETS="[Darwin|Android|Windows|Linux]"
 
-export BUILD_WITH_LIBS=false
+BUILD_PROJECT=
+BUILD_TARGET=
+IS_DEBUG=false
 
-if [[ ! "$TARGET_PARAMS" =~ "$BUILD_TARGET" ]] ; then
+print_usage() 
+{
+    echo "Usage: base ${0} \n" \
+         "\t -p ${PROJECTS} \n" \
+         "\t -t ${TARGETS} \n" \
+         "\t -d (optional, debug build) \n"
+    echo "Example: bash ${0} ffmpeg darwin"
+}
+
+while getopts ":p:t:d" opt; do
+  case $opt in
+    p)
+      #echo "-p arg:$OPTARG index:$OPTIND"
+      BUILD_PROJECT=$OPTARG
+    ;;
+    t)
+      BUILD_TARGET=$OPTARG
+    ;;
+    d)
+      IS_DEBUG=true
+    ;;
+    :)
+      echo "Option -$OPTARG requires an arguement."
+      print_usage
+    ;;
+    ?)
+      echo "Invalid option: -$OPTARG index:$OPTIND"
+      print_usage
+    ;;
+  esac
+done
+
+if [[ ! "$TARGETS" =~ "$BUILD_TARGET" ]] ; then
   print_usage
   exit 1
 fi
@@ -120,6 +129,6 @@ fi
 source ${ROOT_PATH}/script/common.sh
 
 prepare_source
-build_main $*
+build_main
 
 
