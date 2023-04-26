@@ -3,7 +3,8 @@
 #ref git@github.com:kewlbear/FFmpeg-iOS-build-script.git
 
 SCRIPT_PATH=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
-ROOT_PATH=${SCRIPT_PATH}/../..
+ROOT_PATH=$(cd "${SCRIPT_PATH}/../.." && pwd)
+
 source ${ROOT_PATH}/script/common.sh
 source ${ROOT_PATH}/script/ffmpeg_modules.sh
 
@@ -29,8 +30,7 @@ then
   brew install yasm || exit 1
 fi
 
-
-#need fix
+# need fix
 # sed -i .tmp "s/s\+({/s\+(\\\\{/g;s/s\*})/s\*\\\\})/g" ./script/Darwin/tools/gas-preprocessor.pl
 #
 # if [ ! `which gas-preprocessor.pl` ]
@@ -118,6 +118,12 @@ build() {
 
   CONFIGURATION="$CONFIGURATION --enable-libx264"
   CONFIGURATION="$CONFIGURATION --enable-encoder=libx264"
+
+  # patch wavs filter
+  if [[ -f "${FFMPEG_REPO_PATH}/libavfilter/vf_wavs.c" ]]; then
+    CONFIGURATION="$CONFIGURATION --enable-filter=wavs"
+    CONFIGURATION="$CONFIGURATION --enable-filter=scale"
+  fi
   
   export PKG_CONFIG_PATH=$PREFIX/$FFMPEG_TARGET/lib/pkgconfig
 

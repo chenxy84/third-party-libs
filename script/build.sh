@@ -32,19 +32,32 @@ prepare_source()
   fi
 
   if [ ! -d "${OPENSSL_REPO_PATH}" ]; then
-    tar zxvf ${ARCHS_PATH}/openssl-${OPENSSL_VERSION}.tar.gz -C ${REPO_PATH}
+    tar zxvf ${ARCHS_PATH}/${OPENSSL_FILE_NAME}.tar.gz -C ${REPO_PATH}
+    mv ${REPO_PATH}/${OPENSSL_FILE_NAME} ${OPENSSL_REPO_PATH}
   fi
 
   if [ ! -d "${X264_REPO_PATH}" ]; then
-    pushd ${REPO_PATH}
-      git clone --branch $X264_GIT_BRANCH --depth=1 $X264_GIT_URL
-    popd
+    # pushd ${REPO_PATH}
+    #   git clone --branch $X264_GIT_BRANCH --depth=1 $X264_GIT_URL
+    # popd
+    tar zxvf ${ARCHS_PATH}/${X264_FILE_NAME}.tar.bz2 -C ${REPO_PATH}
+    mv ${REPO_PATH}/${X264_FILE_NAME} ${X264_REPO_PATH}
   fi
 
   if [ ! -d "${FFMPEG_REPO_PATH}" ]; then
+    # pushd ${REPO_PATH}
+    #   git clone --branch $FFMPEG_GIT_BRANCH --depth=1 $FFMPEG_GIT_URL ffmpeg
+    # popd
+    tar zxvf ${ARCHS_PATH}/${FFMPEG_FILE_NAME}.tar.gz -C ${REPO_PATH}
+    mv ${REPO_PATH}/${FFMPEG_FILE_NAME} ${FFMPEG_REPO_PATH}
+  fi
+
+  # TODO apply patches
+  if [ ! -d "${PATCHES_REPO_PATH}" ]; then
     pushd ${REPO_PATH}
-      git clone --branch $FFMPEG_GIT_BRANCH --depth=1 $FFMPEG_GIT_URL
+      git clone --branch $PATCHES_GIT_BRANCH --depth=1 $PATCHES_GIT_URL patches
     popd
+    sh ${PATCHES_REPO_PATH}/do.sh
   fi
 }
 
@@ -79,7 +92,7 @@ on_cancel() {
 }
 
 SCRIPT_PATH=$(cd "$( dirname "${BASH_SOURCE}[0]}" )" && pwd)
-export ROOT_PATH=$(cd "${SCRIPT_PATH}"/.. && pwd)
+export ROOT_PATH=$(cd "${SCRIPT_PATH}/.." && pwd)
 export ARCHS_PATH=${ROOT_PATH}/archs
 
 PROJECTS="[ffmpeg|openssl|libx264|libx265|libcurl]"
@@ -120,6 +133,11 @@ while getopts ":p:t:d" opt; do
     ;;
   esac
 done
+
+if [[ ! "$PROJECTS" =~ "$BUILD_PROJECT" ]] ; then
+  print_usage
+  exit 1
+fi
 
 if [[ ! "$TARGETS" =~ "$BUILD_TARGET" ]] ; then
   print_usage

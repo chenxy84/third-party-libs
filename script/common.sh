@@ -6,9 +6,15 @@ export REPO_PATH=${ROOT_PATH}/repos
 export TEMP_PATH=${ROOT_PATH}/temp
 export DIST_PATH=${ROOT_PATH}/dist
 
-export OPENSSL_REPO_PATH=${REPO_PATH}/openssl-${OPENSSL_VERSION}
+export OPENSSL_FILE_NAME=openssl-${OPENSSL_VERSION}
+export FFMPEG_FILE_NAME=ffmpeg-${FFMPEG_VERSION}
+export X264_FILE_NAME=x264-${X264_VERSION}
+
+export OPENSSL_REPO_PATH=${REPO_PATH}/openssl
 export FFMPEG_REPO_PATH=${REPO_PATH}/ffmpeg
 export X264_REPO_PATH=${REPO_PATH}/x264
+
+export PATCHES_REPO_PATH=${REPO_PATH}/patches
 
 if [ "${BUILD_TARGET}" == "" ]; then
   echo "BUILD_TARGET missing, using export BUILD_TARGET= , to set."

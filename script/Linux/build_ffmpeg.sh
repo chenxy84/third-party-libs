@@ -10,7 +10,7 @@ source ${ROOT_PATH}/script/ffmpeg_modules.sh
 build() {
 
   EXTRA_OPTIONS=
-  if [[ -d /usr/local/cuda/include ]]; then
+  if [[ -d "/usr/local/cuda/include" ]]; then
     EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-cuda"
     EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-cuvid"
     EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-nvdec"
@@ -32,9 +32,11 @@ build() {
     EXTRA_CFLAGS="$EXTRA_CFLAGS -I/usr/local/cuda/include"
     EXTRA_LDFLAGS="$EXTRA_LDFLAGS -L/usr/local/cuda/lib64"
 
-    # wavs filter test
-    # CONFIGURATION="$CONFIGURATION --enable-filter=wavs"
-    # CONFIGURATION="$CONFIGURATION --enable-filter=scale"
+    # patch wavs filter
+    if [[ -f "${FFMPEG_REPO_PATH}/libavfilter/vf_wavs.c" ]]; then
+      CONFIGURATION="$CONFIGURATION --enable-filter=wavs"
+      CONFIGURATION="$CONFIGURATION --enable-filter=scale"
+    fi
 
   else
     EXTRA_OPTIONS="$EXTRA_OPTIONS --disable-nonfree"

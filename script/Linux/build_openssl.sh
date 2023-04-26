@@ -19,7 +19,7 @@ build() {
 
   echo "-------- > Start build configuration $OPENSSL_TARGET"
 
-  temp_dir=${TEMP_PATH}/${BUILD_TARGET}/${OPENSSL_TARGET}/openssl-${OPENSSL_VERSION}
+  temp_dir=${TEMP_PATH}/${BUILD_TARGET}/${OPENSSL_TARGET}/openssl
   if [ -d "${temp_dir}" ]; then
     rm -rf ${temp_dir}
   fi

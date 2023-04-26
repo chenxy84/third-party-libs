@@ -64,7 +64,7 @@ build() {
   export AR="$TOOLCHAINS/bin/llvm-ar"
   export ANDROID_API=$API
 
-  temp_dir=${TEMP_PATH}/${BUILD_TARGET}/${OPENSSL_TARGET}/openssl-${OPENSSL_VERSION}
+  temp_dir=${TEMP_PATH}/${BUILD_TARGET}/${OPENSSL_TARGET}/openssl
   if [ -d "${temp_dir}" ]; then
     rm -rf ${temp_dir}
   fi
