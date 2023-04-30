@@ -57,7 +57,7 @@ prepare_source()
     pushd ${REPO_PATH}
       git clone --branch $PATCHES_GIT_BRANCH --depth=1 $PATCHES_GIT_URL patches
     popd
-    sh ${PATCHES_REPO_PATH}/do.sh
+    bash ${PATCHES_REPO_PATH}/do.sh
   fi
 }
 
