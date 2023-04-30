@@ -40,7 +40,7 @@ prepare_source()
     # pushd ${REPO_PATH}
     #   git clone --branch $X264_GIT_BRANCH --depth=1 $X264_GIT_URL
     # popd
-    tar zxvf ${ARCHS_PATH}/${X264_FILE_NAME}.tar.bz2 -C ${REPO_PATH}
+    tar jxvf ${ARCHS_PATH}/${X264_FILE_NAME}.tar.bz2 -C ${REPO_PATH}
     mv ${REPO_PATH}/${X264_FILE_NAME} ${X264_REPO_PATH}
   fi
 
