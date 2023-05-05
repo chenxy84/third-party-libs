@@ -1,4 +1,5 @@
-# deps_build
+# media thirdparty library build script
+## include ffmpeg、x264、openssl、etc.
 
 # build requirement
 
@@ -8,7 +9,7 @@ https://redirector.gvt1.com/edgedl/android/studio/install/2022.1.1.21/android-st
 
 ## Darwin (iOS & macOS):
 xcode 14.2
-Windows:
+
 brew install nasm yasm
 
 ## Windows
