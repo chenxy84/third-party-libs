@@ -3,8 +3,10 @@
 #ref git@github.com:kewlbear/FFmpeg-iOS-build-script.git
 
 SCRIPT_PATH=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
-ROOT_PATH=${SCRIPT_PATH}/../..
+ROOT_PATH=$(cd "${SCRIPT_PATH}/../.." && pwd)
+
 source ${ROOT_PATH}/script/common.sh
+source ${ROOT_PATH}/script/ffmpeg_modules.sh
 
 export DEVELOPER=$(xcode-select -print-path)
 
@@ -28,8 +30,7 @@ then
   brew install yasm || exit 1
 fi
 
-
-#need fix
+# need fix
 # sed -i .tmp "s/s\+({/s\+(\\\\{/g;s/s\*})/s\*\\\\})/g" ./script/Darwin/tools/gas-preprocessor.pl
 #
 # if [ ! `which gas-preprocessor.pl` ]
@@ -82,7 +83,12 @@ build() {
     # AS="gas-preprocessor.pl -- $CC"
     AS="$CC"
     EXTRA_CFLAGS="$CFLAGS -target x86_64-apple-macos -arch x86_64 -mmacosx-version-min=$MACOS_DEPLOYMENT_TARGET"
-    EXTRA_OPTIONS=
+    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-hwaccel=h264_videotoolbox"
+    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-hwaccel=hevc_videotoolbox"
+    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-hwaccel=vp9_videotoolbox"
+    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-hwaccel=mpeg4_videotoolbox"
+    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-hwaccel=prores_videotoolbox"
+
     ;;
   esac
 
@@ -112,6 +118,12 @@ build() {
 
   CONFIGURATION="$CONFIGURATION --enable-libx264"
   CONFIGURATION="$CONFIGURATION --enable-encoder=libx264"
+
+  # patch wavs filter
+  if [[ -f "${FFMPEG_REPO_PATH}/libavfilter/vf_wavs.c" ]]; then
+    CONFIGURATION="$CONFIGURATION --enable-filter=wavs"
+    CONFIGURATION="$CONFIGURATION --enable-filter=scale"
+  fi
   
   export PKG_CONFIG_PATH=$PREFIX/$FFMPEG_TARGET/lib/pkgconfig
 
@@ -147,10 +159,50 @@ build() {
 
 }
 
+build_ios_fat_lib() {
+
+  fat_target_path=$PREFIX/iOS_fat
+  if [ -d "${fat_target_path}" ]; then
+    rm -rf ${fat_target_path}
+  fi
+
+  mkdir -p ${fat_target_path}/lib
+
+  # $PREFIX/iOS_arm64/
+
+  libs=
+  libs+=(libavcodec.a)
+  libs+=(libavfilter.a)
+  libs+=(libavformat.a)
+  libs+=(libavutil.a)
+  libs+=(libswresample.a)
+  libs+=(libswscale.a)
+  libs+=(libcrypto.a)
+  libs+=(libssl.a)
+  libs+=(libx264.a)
+
+  for lib in ${libs[@]}
+  do
+    echo "create fat lib $lib"
+    lipo -create \
+    $PREFIX/iOS_arm64/lib/${lib} \
+    $PREFIX/iOS_Simulator_x86_64/lib/${lib} \
+    -output ${fat_target_path}/lib/${lib}
+  done
+
+  cp -rf $PREFIX/iOS_arm64/include ${fat_target_path}/
+  cp -f ${FFMPEG_REPO_PATH}/libavformat/avc.h ${fat_target_path}/include/libavformat/
+
+  # lipo -create 
+
+}
+
 build_all() {
   build "iOS_arm64"
   build "iOS_Simulator_x86_64"
-  build "macOS_x86_64"
+  build "macOS_x86_64" 
+
+  build_ios_fat_lib
 }
 
 echo "-------- Start --------"

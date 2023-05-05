@@ -3,6 +3,14 @@
 SCRIPT_PATH=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
 ROOT_PATH=${SCRIPT_PATH}/../..
 source ${ROOT_PATH}/script/common.sh
+source ${ROOT_PATH}/script/ffmpeg_modules.sh
+
+if [ "${ANDROID_SDK}" == "" ]; then
+  echo "ANDROID_SDK not set"
+  exit 1;
+fi
+
+yes | $ANDROID_SDK/cmdline-tools/latest/bin/sdkmanager --licenses
 
 if [ "${ANDROID_NDK}" == "" ]; then
 	echo "ANDROID_NDK not set"
@@ -18,14 +26,20 @@ API=26
 TOOLCHAINS="$NDK_PATH/toolchains/llvm/prebuilt/$HOST_PLATFORM"
 SYSROOT="$NDK_PATH/toolchains/llvm/prebuilt/$HOST_PLATFORM/sysroot"
 
-CFLAG="-Os -fPIC -DANDROID"
-LDFLAG="-lc -lm -ldl -llog -lz"
+CFLAG="-O3 -fPIC -DANDROID"
+LDFLAG="-lm -ldl -llog -lz"
 
 build() {
   FFMPEG_TARGET=$1
 
-  EXTRA_OPTIONS=
+  SYSROOT_PREFIX=
+  TOOLCHAINS_PREFIX=
+  CC=
+  CXX=
+  CROSS_PREFIX=
   EXTRA_CFLAGS=
+  EXTRA_OPTIONS=
+
   EXTRA_CXXFLAGS=
   EXTRA_LDFLAGS=
 
@@ -33,49 +47,40 @@ build() {
   case ${FFMPEG_TARGET} in
   armeabi-v7a)
     ARCH="arm"
-    CPU="armv7-a"
-    MARCH="armv7-a"
-    TARGET=armv7a-linux-androideabi
-    CC="$TOOLCHAINS/bin/$TARGET$API-clang"
-    CXX="$TOOLCHAINS/bin/$TARGET$API-clang++"
-    CROSS_PREFIX="$TOOLCHAINS/bin/$TARGET$API-"
-    EXTRA_CFLAGS="-mfloat-abi=softfp -mfpu=vfp -marm -march=$MARCH"
-    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-neon --cpu=$CPU "
+    CLANG_RT_ARCH=$ARCH
+    SYSROOT_PREFIX=$ARCH-linux-androideabi
+    TOOLCHAINS_PREFIX=armv7a-linux-androideabi
+    EXTRA_CFLAGS="-march=armv7-a -mfpu=neon -mfloat-abi=softfp -marm"
+    EXTRA_OPTIONS="$EXTRA_OPTIONS --cpu=armv7-a --enable-neon "
     ;;
   arm64-v8a)
     ARCH="aarch64"
-    MARCH="armv8-a"
-    TARGET=$ARCH-linux-android
-    CC="$TOOLCHAINS/bin/$TARGET$API-clang"
-    CXX="$TOOLCHAINS/bin/$TARGET$API-clang++"
-    CROSS_PREFIX="$TOOLCHAINS/bin/$TARGET-"
-    EXTRA_CFLAGS="-march=$MARCH"
-    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-neon"
+    CLANG_RT_ARCH=$ARCH
+    SYSROOT_PREFIX=$ARCH-linux-android
+    TOOLCHAINS_PREFIX=$SYSROOT_PREFIX
+    EXTRA_CFLAGS="-march=armv8-a -mfpu=neon -mfloat-abi=softfp"
+    EXTRA_OPTIONS="$EXTRA_OPTIONS --cpu=armv8-a --enable-neon"
     ;;
   x86)
-    ARCH="x86"
-    CPU="i686"
-    MARCH="i686"
-    TARGET=i686-linux-android
-    CC="$TOOLCHAINS/bin/$TARGET$API-clang"
-    CXX="$TOOLCHAINS/bin/$TARGET$API-clang++"
-    CROSS_PREFIX="$TOOLCHAINS/bin/$TARGET-"
-    #EXTRA_CFLAGS="$CFLAG -march=$MARCH -mtune=intel -mssse3 -mfpmath=sse -m32"
-    EXTRA_CFLAGS="-march=$MARCH  -mssse3 -mfpmath=sse -m32"
+    ARCH="i686"
+    CLANG_RT_ARCH="i386"
+    SYSROOT_PREFIX=$ARCH-linux-android
+    TOOLCHAINS_PREFIX=$SYSROOT_PREFIX
+    EXTRA_CFLAGS="-march=i686  -mssse3 -mfpmath=sse -m32"
     EXTRA_OPTIONS="$EXTRA_OPTIONS --disable-asm"
     ;;
   x86_64)
     ARCH="x86_64"
-    CPU="x86-64"
-    MARCH="x86_64"
-    TARGET=$ARCH-linux-android
-    CC="$TOOLCHAINS/bin/$TARGET$API-clang"
-    CXX="$TOOLCHAINS/bin/$TARGET$API-clang++"
-    CROSS_PREFIX="$TOOLCHAINS/bin/$TARGET-"
-    #EXTRA_CFLAGS="$CFLAG -march=$CPU -mtune=intel -msse4.2 -mpopcnt -m64"
+    CLANG_RT_ARCH=$ARCH
+    SYSROOT_PREFIX=$ARCH-linux-android
+    TOOLCHAINS_PREFIX=$SYSROOT_PREFIX
     EXTRA_CFLAGS="-march=$CPU -msse4.2 -mpopcnt -m64"
     ;;
   esac
+
+  CROSS_PREFIX="$TOOLCHAINS/bin/$TOOLCHAINS_PREFIX$API-"
+  CC="$TOOLCHAINS/bin/$TOOLCHAINS_PREFIX$API-clang"
+  CXX="$TOOLCHAINS/bin/$TOOLCHAINS_PREFIX$API-clang++"
 
   EXTRA_CFLAGS="$CFLAG $EXTRA_CFLAGS"
   EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS $EXTRA_CFLAGS"
@@ -87,14 +92,17 @@ build() {
 
   CONFIGURATION="$CONFIGURATION --target-os=android"
   CONFIGURATION="$CONFIGURATION --disable-vulkan"
+  CONFIGURATION="$CONFIGURATION --disable-programs"
   
   CONFIGURATION="$CONFIGURATION --enable-cross-compile"
   CONFIGURATION="$CONFIGURATION --enable-optimizations"
-
+  
   CONFIGURATION="$CONFIGURATION --enable-jni"
   CONFIGURATION="$CONFIGURATION --enable-mediacodec"
   CONFIGURATION="$CONFIGURATION --enable-decoder=h264_mediacodec"
   CONFIGURATION="$CONFIGURATION --enable-decoder=hevc_mediacodec"
+  CONFIGURATION="$CONFIGURATION --enable-decoder=vp8_mediacodec"
+  CONFIGURATION="$CONFIGURATION --enable-decoder=vp9_mediacodec"
   
   CONFIGURATION="$CONFIGURATION --logfile=${LOG_PATH}/ffmpeg_config_$FFMPEG_TARGET.log"
   CONFIGURATION="$CONFIGURATION --prefix=$PREFIX/$FFMPEG_TARGET"
@@ -146,18 +154,32 @@ build() {
 
   pushd $PREFIX/$FFMPEG_TARGET/lib
 
-  echo "-------- >SO_PATH: $PREFIX/$FFMPEG_TARGET/lib"
-  echo "-------- >CMD: $CC $EXTRA_CFLAGS"
-  echo "-------- >LDFLAG: $CC $EXTRA_CFLAGS"
+  SYS_LINK_RPATH=$SYSROOT/usr/lib/$SYSROOT_PREFIX/$API
 
-  $CC $EXTRA_CFLAGS \
-  -shared -o libffmpeg.so \
+  echo "-------- >SO_PATH: $PREFIX/$FFMPEG_TARGET/lib"
+  echo "-------- >SYS_LINK_RPATH: $SYS_LINK_RPATH"
+
+  $CC $EXTRA_CFLAGS  \
+  -shared -o libffmpeg.no_strip.so \
   -Wl,--whole-archive -Wl,-Bsymbolic \
+  --no-undefined \
   libavcodec.a libavformat.a libswresample.a libavfilter.a libavutil.a libswscale.a \
   libssl.a libcrypto.a \
   -Wl,--no-whole-archive \
   $EXTRA_LDFLAGS \
   || exit 1
+
+
+  # $TOOLCHAINS/bin/ld -rpath-link=$SYS_LINK_RPATH -L$SYS_LINK_RPATH \
+  # -soname libffmpeg.so \
+  # -shared -Bsymbolic --whole-archive -o $PREFIX/$FFMPEG_TARGET/lib/libffmpeg.no_strip.so \
+  # libavcodec.a libavformat.a libswresample.a libavfilter.a libavutil.a libswscale.a \
+  # libssl.a libcrypto.a \
+  # $EXTRA_LDFLAGS \
+  # || exit 1
+
+  $TOOLCHAINS/bin/llvm-strip -s $PREFIX/$FFMPEG_TARGET/lib/libffmpeg.no_strip.so \
+  -o $PREFIX/$FFMPEG_TARGET/lib/libffmpeg.so
 
   #mv so to jni libs
   android_jnilibs=${ROOT_PATH}/projects/Android/ffmpeg/library/libs/${FFMPEG_TARGET}
