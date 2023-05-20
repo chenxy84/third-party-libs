@@ -29,13 +29,15 @@ build() {
 
     EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-encoder=aac"
 
+    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-filter=scale"
+    EXTRA_OPTIONS="$EXTRA_OPTIONS --enable-filter=scale_npp"
+
     EXTRA_CFLAGS="$EXTRA_CFLAGS -I/usr/local/cuda/include"
     EXTRA_LDFLAGS="$EXTRA_LDFLAGS -L/usr/local/cuda/lib64"
 
     # patch wavs filter
     if [[ -f "${FFMPEG_REPO_PATH}/libavfilter/vf_wavs.c" ]]; then
       CONFIGURATION="$CONFIGURATION --enable-filter=wavs"
-      CONFIGURATION="$CONFIGURATION --enable-filter=scale"
     fi
 
   else
